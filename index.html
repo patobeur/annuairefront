@@ -1,33 +1,314 @@
-
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Annuaire-IA 3D Mind Map</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      body {
-        font-family: 'Inter', sans-serif;
-      }
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&display=swap');
-      .font-orbitron {
-        font-family: 'Orbitron', sans-serif;
-      }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        @keyframes fadeInNode {
+            from { opacity: 0; transform: var(--transform-from); }
+            to { opacity: 1; transform: var(--transform-to); }
+        }
+        @keyframes spinRing {
+            from { transform: rotateX(65deg) rotateZ(0deg); }
+            to { transform: rotateX(65deg) rotateZ(360deg); }
+        }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.1.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
-    "react/": "https://aistudiocdn.com/react@^19.1.1/"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+<body class="bg-black">
+    <main
+      id="main-container"
+      class="relative w-screen h-screen text-white overflow-hidden font-sans"
+      style="
+        background-image: url('stars-2643089_1920.jpg');
+        background-size: cover;
+        background-position: center;
+      "
+    >
+      <div class="absolute inset-0 bg-black/60 z-0"></div>
+
+      <header class="absolute top-4 right-4 z-20">
+        <div id="language-switcher" class="flex items-center space-x-2 p-1 bg-black/20 border border-sky-700/50 rounded-lg">
+            <button
+              id="fr-button"
+              class="px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-sky-900 focus:ring-sky-400 bg-sky-500/80 text-white shadow-md"
+            >
+              FR
+            </button>
+            <button
+              id="en-button"
+              class="px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-sky-900 focus:ring-sky-400 bg-sky-900/40 text-sky-300 hover:bg-sky-900/80"
+              disabled
+            >
+              EN
+            </button>
+        </div>
+      </header>
+      
+      <div id="mindmap-container" class="relative z-10 w-full h-full flex items-center justify-center" style="perspective: 1500px">
+        <div id="mindmap-rotation" class="relative transition-transform duration-300 ease-out" style="transform-style: preserve-3d;">
+            <div
+                class="absolute top-1/2 left-1/2 w-80 h-80 md:w-96 md:h-96 rounded-full flex items-center justify-center
+                           shadow-2xl shadow-sky-400/40 border-2 border-sky-300/50
+                           transform-style-3d transition-transform duration-300 ease-out"
+                style="transform: translate(-50%, -50%) translateZ(60px)"
+            >
+                <img
+                    src="https://image.pollinations.ai/prompt/A%20glowing,%20intricate%203D%20sphere%20of%20neural%20networks,%20with%20the%20word%20'AI'%20glowing%20in%20the%20center,%20against%20a%20dark,%20starry%20background"
+                    alt="AI Sphere"
+                    class="w-full h-full object-cover rounded-full"
+                />
+                <div id="saturn-ring-container"></div>
+            </div>
+            <svg
+                id="arc-svg"
+                class="absolute w-full h-full top-0 left-0 pointer-events-none"
+                style="
+                    width: 900px;
+                    height: 900px;
+                    left: 50%;
+                    top: 50%;
+                    margin-left: -450px;
+                    margin-top: -450px;
+                    transform: translateZ(20px);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                "
+                viewBox="0 0 900 900"
+            >
+                <defs>
+                    <filter id="electric-arc-filter">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.5" numOctaves="3" result="turbulence">
+                            <animate attributeName="baseFrequency" dur="0.1s" values="0.01 0.5; 0.02 0.4; 0.01 0.5" repeatCount="indefinite"></animate>
+                        </feTurbulence>
+                        <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="10"></feDisplacementMap>
+                    </filter>
+                </defs>
+                <g id="arc-group" transform="translate(450, 450)"></g>
+            </svg>
+            <div id="nodes-container"></div>
+        </div>
+      </div>
+
+      <footer class="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-sky-400/50 z-20">
+        <p>An interactive visualization of the AI Market Landscape</p>
+      </footer>
+    </main>
+    <script id="mindmap-script">
+document.addEventListener('DOMContentLoaded', () => {
+    const mindMapData = {
+      en: {
+        nodes: [
+          { id: 1, title: "AI Engines (LLM & GenAI)", link: "repertoire-ia-fr/" },
+          { id: 2, title: "AI Agents & Agentics", link: "repertoire-ia-fr/" },
+          { id: 3, title: "AI Workflow Automation", link: "repertoire-ia-fr/" },
+          { id: 4, title: "AI Graphic & Video Gen", link: "repertoire-ia-fr/" },
+          { id: 5, title: "AI Music Gen", link: "repertoire-ia-fr/" },
+          { id: 6, title: "AI App Gen (no-code & low-code)", link: "repertoire-ia-fr/" },
+          { id: 7, title: "AI Conversation & Chatbot", link: "repertoire-ia-fr/" },
+          { id: 8, title: "AI Vocal Gen & Cloning", link: "repertoire-ia-fr/" },
+          { id: 9, title: "AI 3D & Vector Gen", link: "repertoire-ia-fr/" },
+          { id: 10, title: "AI Literature Composition", link: "repertoire-ia-fr/" },
+          { id: 11, title: "AI Coding Assistant", link: "repertoire-ia-fr/" },
+          { id: 12, title: "AI Marketplace", link: "repertoire-ia-fr/" },
+          { id: 13, title: "AI Website Gen", link: "repertoire-ia-fr/" },
+          { id: 14, title: "Data Analysis & BI", link: "repertoire-ia-fr/" },
+        ]
+      },
+      fr: {
+        nodes: [
+          { id: 1, title: "Moteurs IA (LLM & GenAI)", link: "moteur-ia/" },
+          { id: 2, title: "Agents IA & Agentique", link: "agents-agentiques-ia/" },
+          { id: 3, title: "Automatisation des workflows", link: "automatisation-flux-operationnels-workflow/" },
+          { id: 4, title: "Générateur Graphiques & Vidéos", link: "generateur-graphique-video/" },
+          { id: 5, title: "Générateur de Musique", link: "generateur-musical/" },
+          { id: 6, title: "Générateur d'Applications", link: "repertoire-ia-fr/" },
+          { id: 7, title: "Conversation IA & Chatbot", link: "repertoire-ia-fr/" },
+          { id: 8, title: "Générateur Vocal & Clonage Vocal", link: "repertoire-ia-fr/" },
+          { id: 9, title: "Générateur 3D & Modèles Vectoriel", link: "repertoire-ia-fr/" },
+          { id: 10, title: "Composition littéraire", link: "repertoire-ia-fr/" },
+          { id: 11, title: "Assistant de Codage", link: "repertoire-ia-fr/" },
+          { id: 12, title: "Marketplace de l'IA", link: "repertoire-ia-fr/" },
+          { id: 13, title: "Générateur de sites Web", link: "repertoire-ia-fr/" },
+          { id: 14, title: "Analyse de Données & BI", link: "repertoire-ia-fr/" },
+        ]
+      }
+    };
+
+    let currentLanguage = 'fr';
+    let rotation = { x: 0, y: 0 };
+    let hoveredNodeId = null;
+
+    const mainContainer = document.getElementById('main-container');
+    const mindmapRotation = document.getElementById('mindmap-rotation');
+    const nodesContainer = document.getElementById('nodes-container');
+    const arcSvg = document.getElementById('arc-svg');
+    const arcGroup = document.getElementById('arc-group');
+    const saturnRingContainer = document.getElementById('saturn-ring-container');
+    const frButton = document.getElementById('fr-button');
+    const enButton = document.getElementById('en-button');
+
+    const renderMindMap = () => {
+        const isMobile = window.innerWidth < 768;
+        const radius = isMobile ? 260 : 450;
+        const nodeZ = 20;
+        const nodes = mindMapData[currentLanguage].nodes;
+        const numNodes = nodes.length;
+        const angleStep = (2 * Math.PI) / numNodes;
+
+        nodesContainer.innerHTML = '';
+
+        nodes.forEach((node, i) => {
+            const angle = i * angleStep;
+            const x = radius * Math.cos(angle);
+            const y = radius * Math.sin(angle);
+            
+            const transformTo = `translateX(-50%) translateY(-50%) translate3d(${x}px, ${y}px, ${nodeZ}px)`;
+            const transformFrom = `translateX(-50%) translateY(-50%) translate3d(${x*0.5}px, ${y*0.5}px, -50px)`;
+
+            const nodeElement = document.createElement('a');
+            nodeElement.href = node.link;
+            nodeElement.target = '_blank';
+            nodeElement.rel = 'noopener noreferrer';
+            nodeElement.className = "absolute w-36 h-24 md:w-40 md:h-28 p-2 flex items-center justify-center text-center text-xs md:text-sm font-medium bg-sky-900/30 border border-sky-400/50 rounded-lg shadow-lg shadow-sky-500/20 backdrop-blur-sm hover:border-sky-300 hover:shadow-sky-400/40 transition-all duration-300 ease-out cursor-pointer";
+            nodeElement.style.top = '50%';
+            nodeElement.style.left = '50%';
+            nodeElement.style.animation = `fadeInNode 0.5s ${i * 0.05}s ease-out forwards`;
+            nodeElement.style.opacity = 0;
+            nodeElement.style.setProperty('--transform-from', transformFrom);
+            nodeElement.style.setProperty('--transform-to', transformTo);
+
+            nodeElement.innerHTML = `<span class="text-sky-200">${node.title}</span>`;
+            
+            nodeElement.addEventListener('mouseenter', () => {
+                hoveredNodeId = node.id;
+                renderArc();
+            });
+            nodeElement.addEventListener('mouseleave', () => {
+                hoveredNodeId = null;
+                renderArc();
+            });
+
+            nodesContainer.appendChild(nodeElement);
+        });
+    };
+
+    const generateArcPath = (x1, y1, x2, y2) => {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const segments = Math.max(5, Math.floor(length / 20));
+        let path = `M ${x1} ${y1}`;
+        
+        for (let i = 1; i < segments; i++) {
+            const t = i / segments;
+            const x = x1 + dx * t + (Math.random() - 0.5) * 20;
+            const y = y1 + dy * t + (Math.random() - 0.5) * 20;
+            path += ` L ${x} ${y}`;
+        }
+        
+        path += ` L ${x2} ${y2}`;
+        return path;
+    };
+
+    const renderArc = () => {
+        if (hoveredNodeId !== null) {
+            const isMobile = window.innerWidth < 768;
+            const radius = isMobile ? 260 : 450;
+            const nodes = mindMapData[currentLanguage].nodes;
+            const numNodes = nodes.length;
+            const angleStep = (2 * Math.PI) / numNodes;
+            const nodeIndex = nodes.findIndex(n => n.id === hoveredNodeId);
+            const angle = nodeIndex * angleStep;
+            const x = radius * Math.cos(angle);
+            const y = radius * Math.sin(angle);
+            const path = generateArcPath(0, 0, x, y);
+
+            arcGroup.innerHTML = `
+                <path d="${path}" fill="none" stroke="rgba(125, 211, 252, 0.8)" stroke-width="3" stroke-linecap="round" filter="url(#electric-arc-filter)"></path>
+                <path d="${path}" fill="none" stroke="rgba(255, 255, 255, 0.9)" stroke-width="1" stroke-linecap="round" filter="url(#electric-arc-filter)"></path>
+            `;
+            arcSvg.style.opacity = 1;
+        } else {
+            arcSvg.style.opacity = 0;
+        }
+    };
+    
+    const renderSaturnRing = () => {
+        const text = "TEST-AI.COM • ".repeat(5);
+        const characters = text.split('');
+        const isMobile = window.innerWidth < 768;
+        const radius = isMobile ? 135 : 500;
+        
+        const ring = document.createElement('div');
+        ring.className = "absolute top-1/2 left-1/2 w-full h-full";
+        ring.style.transformStyle = 'preserve-3d';
+        ring.style.animation = 'spinRing 40s linear infinite';
+        
+        let ringHtml = '';
+        characters.forEach((char, i) => {
+            const angle = (i / characters.length) * 360;
+            const transform = `rotate(${angle}deg) translateX(${radius}px) rotateZ(90deg)`;
+            const className = isMobile 
+                ? "absolute top-1/2 left-1/2 -mt-2 -ml-1 text-sky-300 font-orbitron text-base" 
+                : "absolute top-1/2 left-1/2 -mt-2.5 -ml-1 text-sky-300 font-orbitron text-lg hidden md:inline-block";
+            ringHtml += `<span class="${className}" style="transform: ${transform}; text-shadow: 0 0 ${isMobile ? 5 : 8}px rgba(125, 211, 252, 1);">${char}</span>`;
+        });
+        ring.innerHTML = ringHtml;
+        
+        const container = document.createElement('div');
+        container.className = "absolute top-1/2 left-1/2 w-full h-full pointer-events-none";
+        container.style.transformStyle = 'preserve-3d';
+        container.appendChild(ring);
+        
+        saturnRingContainer.innerHTML = '';
+        saturnRingContainer.appendChild(container);
+    };
+
+    mainContainer.addEventListener('mousemove', (e) => {
+        const { clientX, clientY, currentTarget } = e;
+        const { left, top, width, height } = currentTarget.getBoundingClientRect();
+        const x = (clientX - left) / width - 0.5;
+        const y = (clientY - top) / height - 0.5;
+
+        const MAX_ROTATION = 12;
+        rotation = { x: -y * MAX_ROTATION, y: x * MAX_ROTATION };
+        mindmapRotation.style.transform = `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
+    });
+
+    mainContainer.addEventListener('mouseleave', () => {
+        rotation = { x: 0, y: 0 };
+        mindmapRotation.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    });
+
+    frButton.addEventListener('click', () => {
+        if (currentLanguage !== 'fr') {
+            currentLanguage = 'fr';
+            frButton.classList.add('bg-sky-500/80', 'text-white', 'shadow-md');
+            frButton.classList.remove('bg-sky-900/40', 'text-sky-300', 'hover:bg-sky-900/80');
+            enButton.classList.add('bg-sky-900/40', 'text-sky-300', 'hover:bg-sky-900/80');
+            enButton.classList.remove('bg-sky-500/80', 'text-white', 'shadow-md');
+            renderMindMap();
+        }
+    });
+
+    // Initial render
+    renderMindMap();
+    renderSaturnRing();
+
+    window.addEventListener('resize', () => {
+        renderMindMap();
+        renderSaturnRing();
+    });
+});
+    </script>
+</body>
 </html>
