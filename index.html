@@ -107,15 +107,29 @@
 document.addEventListener('DOMContentLoaded', () => {
     const CONFIG = {
         CENTRAL_NODE_SIZE: {
-            size_percentage: 0.4 // 30% of the smaller viewport dimension
+            size_percentage: 0.4 // 40% of the smaller viewport dimension
         },
         NODE_SIZE: {
-            mobile: { w: 'w-28', h: 'h-20' }, // Smaller nodes for mobile
-            desktop: { w: 'w-32', h: 'h-24' } // Smaller nodes for desktop
+            minWidth: 90, // in pixels
+            maxWidth: 140,
+            minHeight: 60,
+            maxHeight: 90,
+            minViewport: 320, // Mobile viewport width
+            maxViewport: 1280 // Desktop viewport width
+        },
+        NODE_COLORS: {
+            background: 'bg-sky-900/30',
+            border: 'border-sky-400/50',
+            text: 'text-sky-200',
+            shadow: 'shadow-sky-500/20',
+            hover: {
+                border: 'border-sky-300',
+                shadow: 'shadow-sky-400/40'
+            }
         },
         TEXT_SIZE: {
-            mobile: 'text-sm', // Larger text for mobile
-            desktop: 'text-sm'  // Kept sm for better fit in smaller nodes
+            mobile: 'text-xs',
+            desktop: 'text-sm'
         },
         RADIUS_SETTINGS: {
             base_radius_desktop: 450,
@@ -215,7 +229,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const numNodes = nodes.length;
         const angleStep = (2 * Math.PI) / numNodes;
 
-        const nodeSize = isMobile ? CONFIG.NODE_SIZE.mobile : CONFIG.NODE_SIZE.desktop;
+        // Dynamic node sizing
+        const { minWidth, maxWidth, minHeight, maxHeight, minViewport, maxViewport } = CONFIG.NODE_SIZE;
+        const viewportWidth = window.innerWidth;
+        const sizeFactor = Math.max(0, Math.min(1, (viewportWidth - minViewport) / (maxViewport - minViewport)));
+
+        const nodeWidth = minWidth + (maxWidth - minWidth) * sizeFactor;
+        const nodeHeight = minHeight + (maxHeight - minHeight) * sizeFactor;
+
         const textSize = isMobile ? CONFIG.TEXT_SIZE.mobile : CONFIG.TEXT_SIZE.desktop;
 
         nodesContainer.innerHTML = '';
@@ -232,7 +253,13 @@ document.addEventListener('DOMContentLoaded', () => {
             nodeElement.href = node.link;
             nodeElement.target = '_blank';
             nodeElement.rel = 'noopener noreferrer';
-            nodeElement.className = `absolute ${nodeSize.w} ${nodeSize.h} p-2 flex items-center justify-center text-center ${textSize} font-medium bg-sky-900/30 border border-sky-400/50 rounded-lg shadow-lg shadow-sky-500/20 backdrop-blur-sm hover:border-sky-300 hover:shadow-sky-400/40 transition-all duration-300 ease-out cursor-pointer`;
+
+            const colors = CONFIG.NODE_COLORS;
+            const baseClasses = `absolute p-2 flex items-center justify-center text-center ${textSize} font-medium rounded-lg backdrop-blur-sm transition-all duration-300 ease-out cursor-pointer`;
+            nodeElement.className = `${baseClasses} ${colors.background} ${colors.border} ${colors.shadow}`;
+
+            nodeElement.style.width = `${nodeWidth}px`;
+            nodeElement.style.height = `${nodeHeight}px`;
             nodeElement.style.top = '50%';
             nodeElement.style.left = '50%';
             nodeElement.style.animation = `fadeInNode 0.5s ${i * 0.05}s ease-out forwards`;
@@ -240,14 +267,18 @@ document.addEventListener('DOMContentLoaded', () => {
             nodeElement.style.setProperty('--transform-from', transformFrom);
             nodeElement.style.setProperty('--transform-to', transformTo);
 
-            nodeElement.innerHTML = `<span class="text-sky-200">${node.title}</span>`;
+            nodeElement.innerHTML = `<span class="${colors.text}">${node.title}</span>`;
             
             nodeElement.addEventListener('mouseenter', () => {
                 hoveredNodeId = node.id;
+                nodeElement.classList.remove(colors.border, colors.shadow);
+                nodeElement.classList.add(colors.hover.border, colors.hover.shadow);
                 renderArc();
             });
             nodeElement.addEventListener('mouseleave', () => {
                 hoveredNodeId = null;
+                nodeElement.classList.remove(colors.hover.border, colors.hover.shadow);
+                nodeElement.classList.add(colors.border, colors.shadow);
                 renderArc();
             });
 
