@@ -255,8 +255,11 @@ document.addEventListener('DOMContentLoaded', () => {
             nodeElement.rel = 'noopener noreferrer';
 
             const colors = CONFIG.NODE_COLORS;
-            const baseClasses = `absolute p-2 flex items-center justify-center text-center ${textSize} font-medium rounded-lg backdrop-blur-sm transition-all duration-300 ease-out cursor-pointer`;
-            nodeElement.className = `${baseClasses} ${colors.background} ${colors.border} ${colors.shadow}`;
+            const hoverBorder = 'hover:' + colors.hover.border.replace('border-', 'border-');
+            const hoverShadow = 'hover:' + colors.hover.shadow.replace('shadow-', 'shadow-');
+
+            const baseClasses = `absolute p-2 flex items-center justify-center text-center ${textSize} font-medium rounded-lg backdrop-blur-sm transition-all duration-300 ease-out cursor-pointer border shadow-lg`;
+            nodeElement.className = `${baseClasses} ${colors.background} ${colors.border} ${colors.shadow} ${hoverBorder} ${hoverShadow}`;
 
             nodeElement.style.width = `${nodeWidth}px`;
             nodeElement.style.height = `${nodeHeight}px`;
@@ -268,17 +271,13 @@ document.addEventListener('DOMContentLoaded', () => {
             nodeElement.style.setProperty('--transform-to', transformTo);
 
             nodeElement.innerHTML = `<span class="${colors.text}">${node.title}</span>`;
-            
+
             nodeElement.addEventListener('mouseenter', () => {
                 hoveredNodeId = node.id;
-                nodeElement.classList.remove(colors.border, colors.shadow);
-                nodeElement.classList.add(colors.hover.border, colors.hover.shadow);
                 renderArc();
             });
             nodeElement.addEventListener('mouseleave', () => {
                 hoveredNodeId = null;
-                nodeElement.classList.remove(colors.hover.border, colors.hover.shadow);
-                nodeElement.classList.add(colors.border, colors.shadow);
                 renderArc();
             });
 
