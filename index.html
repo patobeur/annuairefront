@@ -56,6 +56,7 @@
       <div id="mindmap-container" class="relative z-10 w-full h-full flex items-center justify-center" style="perspective: 1500px">
         <div id="mindmap-rotation" class="relative transition-transform duration-300 ease-out" style="transform-style: preserve-3d;">
             <div
+                id="central-node"
                 class="absolute top-1/2 left-1/2 w-80 h-80 md:w-96 md:h-96 rounded-full flex items-center justify-center
                            shadow-2xl shadow-sky-400/40 border-2 border-sky-300/50
                            transform-style-3d transition-transform duration-300 ease-out"
@@ -66,8 +67,8 @@
                     alt="AI Sphere"
                     class="w-full h-full object-cover rounded-full"
                 />
-                <div id="saturn-ring-container"></div>
             </div>
+            <div id="saturn-ring-container"></div>
             <svg
                 id="arc-svg"
                 class="absolute w-full h-full top-0 left-0 pointer-events-none"
@@ -156,9 +157,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const frButton = document.getElementById('fr-button');
     const enButton = document.getElementById('en-button');
 
+    const getDynamicRadius = () => {
+        const isMobile = window.innerWidth < 768;
+        // Le rayon de base est plus grand sur bureau que sur mobile.
+        const baseRadius = isMobile ? 280 : 450;
+        // Calcule le rayon maximum pour que les noeuds ne dépassent pas de l'écran.
+        // On prend la moitié de la largeur de l'écran et on soustrait la moitié de la largeur d'un noeud (~72px) + une marge.
+        const maxRadius = (window.innerWidth / 2) - 90;
+        // On retourne le plus petit des deux rayons pour s'assurer que ça ne déborde jamais.
+        const finalradius = Math.min(baseRadius, maxRadius) -100
+        console.log(finalradius)
+        return finalradius;
+    };
+
     const renderMindMap = () => {
         const isMobile = window.innerWidth < 768;
-        const radius = isMobile ? 260 : 450;
+        const radius = getDynamicRadius();
         const nodeZ = 20;
         const nodes = mindMapData[currentLanguage].nodes;
         const numNodes = nodes.length;
@@ -222,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderArc = () => {
         if (hoveredNodeId !== null) {
             const isMobile = window.innerWidth < 768;
-            const radius = isMobile ? 260 : 450;
+            const radius = getDynamicRadius();
             const nodes = mindMapData[currentLanguage].nodes;
             const numNodes = nodes.length;
             const angleStep = (2 * Math.PI) / numNodes;
@@ -243,34 +257,54 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const renderSaturnRing = () => {
+        // Texte à afficher en cercle. Répété pour remplir l'anneau.
         const text = "TEST-AI.COM • ".repeat(5);
         const characters = text.split('');
-        const isMobile = window.innerWidth < 768;
-        const radius = isMobile ? 260 : 450;
         
+        // Récupérer le noeud central pour calculer le rayon du cercle dynamiquement.
+        const centralNode = document.getElementById('central-node');
+        if (!centralNode) return; // S'assurer que l'élément existe
+
+        // Calculer le rayon : la moitié de la largeur du noeud central, plus un petit écart.
+        const centralNodeRadius = centralNode.offsetWidth / 2;
+        const radius = centralNodeRadius + 30; // 30px de marge
+
+        // Vider le conteneur de l'anneau avant de le regénérer.
+        saturnRingContainer.innerHTML = '';
+
+        // Créer l'élément qui contiendra et fera tourner l'anneau.
         const ring = document.createElement('div');
-        ring.className = "absolute top-1/2 left-1/2 w-full h-full OPRING";
+        // Appliquer les styles pour le positionnement, la 3D et l'animation de rotation.
+        ring.className = "absolute top-1/2 left-1/2 w-full h-full";
         ring.style.transformStyle = 'preserve-3d';
         ring.style.animation = 'spinRing 40s linear infinite';
-        
-        let ringHtml = '';
+        // Empêcher les interactions de la souris avec l'anneau de texte.
+        ring.style.pointerEvents = 'none';
+
+        // Pour chaque caractère dans le texte...
         characters.forEach((char, i) => {
+            // ...calculer sa position angulaire sur le cercle (en degrés).
             const angle = (i / characters.length) * 360;
+            // Définir la transformation CSS pour placer le caractère.
+            // 1. rotate(angle) : le positionne sur le cercle.
+            // 2. translateX(radius) : le déplace du centre vers le bord du cercle.
+            // 3. rotateZ(90deg) : oriente le caractère pour qu'il soit "droit" par rapport au cercle.
             const transform = `rotate(${angle}deg) translateX(${radius}px) rotateZ(90deg)`;
-            const className = isMobile 
-                ? "absolute top-1/2 left-1/2 -mt-2 -ml-1 text-sky-300 font-orbitron text-base" 
-                : "absolute top-1/2 left-1/2 -mt-2.5 -ml-1 text-sky-300 font-orbitron text-lg hidden md:inline-block";
-            ringHtml += `<span class="${className}" style="transform: ${transform}; text-shadow: 0 0 ${isMobile ? 5 : 8}px rgba(125, 211, 252, 1);">${char}</span>`;
+
+            // Créer un span pour le caractère.
+            const charElement = document.createElement('span');
+            charElement.className = "absolute top-1/2 left-1/2 -mt-2.5 -ml-1 text-sky-300 font-orbitron text-lg";
+            charElement.style.transform = transform;
+            // Ajouter une ombre pour un effet "glow".
+            charElement.style.textShadow = '0 0 8px rgba(125, 211, 252, 1)';
+            charElement.textContent = char;
+
+            // Ajouter le caractère à l'anneau.
+            ring.appendChild(charElement);
         });
-        ring.innerHTML = ringHtml;
         
-        const container = document.createElement('div');
-        container.className = "absolute top-1/2 left-1/2 w-full h-full pointer-events-none";
-        container.style.transformStyle = 'preserve-3d';
-        container.appendChild(ring);
-        
-        saturnRingContainer.innerHTML = '';
-        saturnRingContainer.appendChild(container);
+        // Ajouter l'anneau complet au conteneur prévu à cet effet dans le HTML.
+        saturnRingContainer.appendChild(ring);
     };
 
     mainContainer.addEventListener('mousemove', (e) => {
