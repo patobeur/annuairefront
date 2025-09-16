@@ -18,8 +18,8 @@
             to { opacity: 1; transform: var(--transform-to); }
         }
         @keyframes spinRing {
-            from { transform: rotateX(65deg) rotateZ(0deg); }
-            to { transform: rotateX(65deg) rotateZ(360deg); }
+            from { transform: rotateX(0) rotateZ(0deg); }
+            to { transform: rotateX(0) rotateZ(360deg); }
         }
     </style>
 </head>
@@ -246,10 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = "TEST-AI.COM • ".repeat(5);
         const characters = text.split('');
         const isMobile = window.innerWidth < 768;
-        const radius = isMobile ? 135 : 500;
+        const radius = isMobile ? 260 : 450;
         
         const ring = document.createElement('div');
-        ring.className = "absolute top-1/2 left-1/2 w-full h-full";
+        ring.className = "absolute top-1/2 left-1/2 w-full h-full OPRING";
         ring.style.transformStyle = 'preserve-3d';
         ring.style.animation = 'spinRing 40s linear infinite';
         
