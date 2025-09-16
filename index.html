@@ -105,11 +105,11 @@
 	</main>
 	<script id="mindmap-script">
 		document.addEventListener('DOMContentLoaded', () => {
-			const CONFIG = {
+			const CONFIG2 = {
 				RING_TEXT: {
-					text: "ABCDEFG-AI.COM • ".repeat(2),
-					margin_percentage: 0.15, // 15% of central node radius
-					font_size_percentage: 0.1 // 10% of central node radius
+					text: "ABCDEFG-AI.COM • ".repeat(5),
+					margin_percentage: 0.05, // 15% of central node radius
+					font_size_percentage: 0.085 // 10% of central node radius
 				},
 				CENTRAL_NODE_SIZE: {
 					size_percentage: 0.4 // 40% of the smaller viewport dimension
@@ -118,7 +118,50 @@
 					minWidth: 90, // in pixels
 					maxWidth: 140,
 					minHeight: 40,
-					maxHeight: 60,
+					maxHeight: 80,
+					minViewport: 320, // Mobile viewport width
+					maxViewport: 1280 // Desktop viewport width
+				},
+				NODE_COLORS: {
+					background: 'bg-sky-900/30',
+					border: 'border-sky-400/50',
+					text: 'text-sky-200',
+					shadow: 'shadow-sky-500/20',
+					hover: {
+						border: 'border-sky-300',
+						shadow: 'shadow-sky-400/40'
+					}
+				},
+				TEXT_SIZE: {
+					mobile: 'text-xs',
+					desktop: 'text-sm'
+				},
+				RADIUS_SETTINGS: {
+					base_radius_desktop: 450,
+					base_radius_mobile: 280,
+					desktop_offset_x: 85,
+					desktop_offset_y: 70,
+					mobile_offset_x: 75,
+					mobile_offset_y: 60,
+					radius_margin: 0
+				},
+				MAX_ROTATION: 12
+			};
+
+			const CONFIG = {
+				RING_TEXT: {
+					text: "ABCDEFG-AI.COM • ".repeat(5),
+					margin_percentage: 0.05, // 15% of central node radius
+					font_size_percentage: 0.085 // 10% of central node radius
+				},
+				CENTRAL_NODE_SIZE: {
+					size_percentage: 0.4 // 40% of the smaller viewport dimension
+				},
+				NODE_SIZE: {
+					minWidth: 90, // in pixels
+					maxWidth: 140,
+					minHeight: 40,
+					maxHeight: 80,
 					minViewport: 320, // Mobile viewport width
 					maxViewport: 1280 // Desktop viewport width
 				},
