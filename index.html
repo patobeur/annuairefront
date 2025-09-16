@@ -107,7 +107,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const CONFIG = {
         CENTRAL_NODE_SIZE: {
-            size_percentage: 0.5 // 30% of the smaller viewport dimension
+            size_percentage: 0.4 // 30% of the smaller viewport dimension
         },
         NODE_SIZE: {
             mobile: { w: 'w-28', h: 'h-20' }, // Smaller nodes for mobile
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             desktop_offset_y: 70,
             mobile_offset_x: 75,
             mobile_offset_y: 60,
-            radius_margin: 10
+            radius_margin: 0
         },
         MAX_ROTATION: 12
     };
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const renderSaturnRing = () => {
         // Texte à afficher en cercle. Répété pour remplir l'anneau.
-        const text = "TEST-AI.COM • ".repeat(5);
+        const text = "ABCDEFG-AI.COM • ".repeat(2);
         const characters = text.split('');
         
         // Récupérer le noeud central pour calculer le rayon du cercle dynamiquement.
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Créer un span pour le caractère.
             const charElement = document.createElement('span');
-            charElement.className = "absolute top-1/2 left-1/2 -mt-2.5 -ml-1 text-sky-300 font-orbitron text-lg";
+            charElement.className = "absolute top-1/2 left-1/2 -mt-2.5 -ml-1 font-orbitron text-lg";
             charElement.style.transform = transform;
             // Ajouter une ombre pour un effet "glow".
             charElement.style.textShadow = '0 0 8px rgba(125, 211, 252, 1)';
