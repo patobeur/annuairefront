@@ -107,7 +107,9 @@
 		document.addEventListener('DOMContentLoaded', () => {
 			const CONFIG = {
 				RING_TEXT: {
-					text: "ABCDEFG-AI.COM • ".repeat(2)
+					text: "ABCDEFG-AI.COM • ".repeat(2),
+					margin_percentage: 0.15, // 15% of central node radius
+					font_size_percentage: 0.1 // 10% of central node radius
 				},
 				CENTRAL_NODE_SIZE: {
 					size_percentage: 0.4 // 40% of the smaller viewport dimension
@@ -330,53 +332,47 @@
 			};
 			
 			const renderSaturnRing = () => {
-				// Texte à afficher en cercle. Répété pour remplir l'anneau.
-				const text = CONFIG.RING_TEXT.text; // "ABCDEFG-AI.COM • ".repeat(2);
+				// Texte à afficher en cercle.
+				const text = CONFIG.RING_TEXT.text;
 				const characters = text.split('');
 				
-				// Récupérer le noeud central pour calculer le rayon du cercle dynamiquement.
+				// Récupérer le noeud central.
 				const centralNode = document.getElementById('central-node');
-				if (!centralNode) return; // S'assurer que l'élément existe
+				if (!centralNode) return;
 
-				// Calculer le rayon : la moitié de la largeur du noeud central, plus un petit écart.
 				const centralNodeRadius = centralNode.offsetWidth / 2;
-				const radius = centralNodeRadius + 30; // 30px de marge
 
-				// Vider le conteneur de l'anneau avant de le regénérer.
+				// Calculer le rayon et la taille de la police dynamiquement.
+				const radius = centralNodeRadius * (1 + CONFIG.RING_TEXT.margin_percentage);
+				const fontSize = centralNodeRadius * CONFIG.RING_TEXT.font_size_percentage;
+
+				// Vider le conteneur.
 				saturnRingContainer.innerHTML = '';
 
-				// Créer l'élément qui contiendra et fera tourner l'anneau.
+				// Créer l'élément conteneur de l'anneau.
 				const ring = document.createElement('div');
-				// Appliquer les styles pour le positionnement, la 3D et l'animation de rotation.
 				ring.className = "absolute top-1/2 left-1/2 w-full h-full";
 				ring.style.transformStyle = 'preserve-3d';
 				ring.style.animation = 'spinRing 40s linear infinite';
-				// Empêcher les interactions de la souris avec l'anneau de texte.
 				ring.style.pointerEvents = 'none';
 
-				// Pour chaque caractère dans le texte...
 				characters.forEach((char, i) => {
-					// ...calculer sa position angulaire sur le cercle (en degrés).
 					const angle = (i / characters.length) * 360;
-					// Définir la transformation CSS pour placer le caractère.
-					// 1. rotate(angle) : le positionne sur le cercle.
-					// 2. translateX(radius) : le déplace du centre vers le bord du cercle.
-					// 3. rotateZ(90deg) : oriente le caractère pour qu'il soit "droit" par rapport au cercle.
-					const transform = `rotate(${angle}deg) translateX(${radius}px) rotateZ(90deg)`;
+					// La transformation pour placer et centrer le caractère.
+					const transform = `rotate(${angle}deg) translateX(${radius}px) rotateZ(90deg) translate(-50%, -50%)`;
 
-					// Créer un span pour le caractère.
 					const charElement = document.createElement('span');
-					charElement.className = "absolute top-1/2 left-1/2 -mt-2.5 -ml-1 font-orbitron text-lg";
+					// On enlève les classes de taille et de marge fixes.
+					charElement.className = "absolute top-1/2 left-1/2 font-orbitron";
 					charElement.style.transform = transform;
-					// Ajouter une ombre pour un effet "glow".
+					// On applique la taille de police dynamique.
+					charElement.style.fontSize = `${fontSize}px`;
 					charElement.style.textShadow = '0 0 8px rgba(125, 211, 252, 1)';
 					charElement.textContent = char;
 
-					// Ajouter le caractère à l'anneau.
 					ring.appendChild(charElement);
 				});
 				
-				// Ajouter l'anneau complet au conteneur prévu à cet effet dans le HTML.
 				saturnRingContainer.appendChild(ring);
 			};
 
