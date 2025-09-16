@@ -57,10 +57,10 @@
         <div id="mindmap-rotation" class="relative transition-transform duration-300 ease-out" style="transform-style: preserve-3d;">
             <div
                 id="central-node"
-                class="absolute top-1/2 left-1/2 w-80 h-80 md:w-96 md:h-96 rounded-full flex items-center justify-center
+                class="absolute top-1/2 left-1/2 rounded-full flex items-center justify-center
                            shadow-2xl shadow-sky-400/40 border-2 border-sky-300/50
                            transform-style-3d transition-transform duration-300 ease-out"
-                style="transform: translate(-50%, -50%) translateZ(60px)"
+                style="transform: translate(-50%, -50%) translateZ(-60px)"
             >
                 <img
                     src="https://image.pollinations.ai/prompt/A%20glowing,%20intricate%203D%20sphere%20of%20neural%20networks,%20with%20the%20word%20'AI'%20glowing%20in%20the%20center,%20against%20a%20dark,%20starry%20background"
@@ -105,6 +105,30 @@
     </main>
     <script id="mindmap-script">
 document.addEventListener('DOMContentLoaded', () => {
+    const CONFIG = {
+        CENTRAL_NODE_SIZE: {
+            size_percentage: 0.5 // 30% of the smaller viewport dimension
+        },
+        NODE_SIZE: {
+            mobile: { w: 'w-28', h: 'h-20' }, // Smaller nodes for mobile
+            desktop: { w: 'w-32', h: 'h-24' } // Smaller nodes for desktop
+        },
+        TEXT_SIZE: {
+            mobile: 'text-sm', // Larger text for mobile
+            desktop: 'text-sm'  // Kept sm for better fit in smaller nodes
+        },
+        RADIUS_SETTINGS: {
+            base_radius_desktop: 450,
+            base_radius_mobile: 280,
+            desktop_offset_x: 85,
+            desktop_offset_y: 70,
+            mobile_offset_x: 75,
+            mobile_offset_y: 60,
+            radius_margin: 10
+        },
+        MAX_ROTATION: 12
+    };
+
     const mindMapData = {
       en: {
         nodes: [
@@ -120,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
           { id: 10, title: "AI Literature Composition", link: "repertoire-ia-fr/" },
           { id: 11, title: "AI Coding Assistant", link: "repertoire-ia-fr/" },
           { id: 12, title: "AI Marketplace", link: "repertoire-ia-fr/" },
-          { id: 13, title: "AI Website Gen", link: "repertoire-ia-fr/" },
+          { id: 13, title: "Générateur de sites Web", link: "repertoire-ia-fr/" },
           { id: 14, title: "Data Analysis & BI", link: "repertoire-ia-fr/" },
         ]
       },
@@ -138,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
           { id: 10, title: "Composition littéraire", link: "repertoire-ia-fr/" },
           { id: 11, title: "Assistant de Codage", link: "repertoire-ia-fr/" },
           { id: 12, title: "Marketplace de l'IA", link: "repertoire-ia-fr/" },
-          { id: 13, title: "Générateur de sites Web", link: "repertoire-ia-fr/" },
+          { id: 13, "title": "Générateur de sites Web", link: "repertoire-ia-fr/" },
           { id: 14, title: "Analyse de Données & BI", link: "repertoire-ia-fr/" },
         ]
       }
@@ -147,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLanguage = 'fr';
     let rotation = { x: 0, y: 0 };
     let hoveredNodeId = null;
+    let currentCentralNodeSize = null;
 
     const mainContainer = document.getElementById('main-container');
     const mindmapRotation = document.getElementById('mindmap-rotation');
@@ -157,17 +182,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const frButton = document.getElementById('fr-button');
     const enButton = document.getElementById('en-button');
 
+    const updateCentralNodeSize = () => {
+        const centralNode = document.getElementById('central-node');
+        const viewportMin = Math.min(window.innerWidth, window.innerHeight);
+        const newSize = viewportMin * CONFIG.CENTRAL_NODE_SIZE.size_percentage;
+
+        centralNode.style.width = `${newSize}px`;
+        centralNode.style.height = `${newSize}px`;
+    };
+
     const getDynamicRadius = () => {
         const isMobile = window.innerWidth < 768;
-        // Le rayon de base est plus grand sur bureau que sur mobile.
-        const baseRadius = isMobile ? 280 : 450;
-        // Calcule le rayon maximum pour que les noeuds ne dépassent pas de l'écran.
-        // On prend la moitié de la largeur de l'écran et on soustrait la moitié de la largeur d'un noeud (~72px) + une marge.
-        const maxRadius = (window.innerWidth / 2) - 90;
-        // On retourne le plus petit des deux rayons pour s'assurer que ça ne déborde jamais.
-        const finalradius = Math.min(baseRadius, maxRadius) -100
-        console.log(finalradius)
-        return finalradius;
+        const settings = CONFIG.RADIUS_SETTINGS;
+
+        const baseRadius = isMobile ? settings.base_radius_mobile : settings.base_radius_desktop;
+
+        const offsetX = isMobile ? settings.mobile_offset_x : settings.desktop_offset_x;
+        const offsetY = isMobile ? settings.mobile_offset_y : settings.desktop_offset_y;
+
+        const maxRadiusX = (window.innerWidth / 2) - offsetX;
+        const maxRadiusY = (window.innerHeight / 2) - offsetY;
+
+        // Use the smallest radius to ensure nodes fit both horizontally and vertically
+        return Math.min(baseRadius, maxRadiusX, maxRadiusY) - settings.radius_margin;
     };
 
     const renderMindMap = () => {
@@ -177,6 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const nodes = mindMapData[currentLanguage].nodes;
         const numNodes = nodes.length;
         const angleStep = (2 * Math.PI) / numNodes;
+
+        const nodeSize = isMobile ? CONFIG.NODE_SIZE.mobile : CONFIG.NODE_SIZE.desktop;
+        const textSize = isMobile ? CONFIG.TEXT_SIZE.mobile : CONFIG.TEXT_SIZE.desktop;
 
         nodesContainer.innerHTML = '';
 
@@ -192,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nodeElement.href = node.link;
             nodeElement.target = '_blank';
             nodeElement.rel = 'noopener noreferrer';
-            nodeElement.className = "absolute w-36 h-24 md:w-40 md:h-28 p-2 flex items-center justify-center text-center text-xs md:text-sm font-medium bg-sky-900/30 border border-sky-400/50 rounded-lg shadow-lg shadow-sky-500/20 backdrop-blur-sm hover:border-sky-300 hover:shadow-sky-400/40 transition-all duration-300 ease-out cursor-pointer";
+            nodeElement.className = `absolute ${nodeSize.w} ${nodeSize.h} p-2 flex items-center justify-center text-center ${textSize} font-medium bg-sky-900/30 border border-sky-400/50 rounded-lg shadow-lg shadow-sky-500/20 backdrop-blur-sm hover:border-sky-300 hover:shadow-sky-400/40 transition-all duration-300 ease-out cursor-pointer`;
             nodeElement.style.top = '50%';
             nodeElement.style.left = '50%';
             nodeElement.style.animation = `fadeInNode 0.5s ${i * 0.05}s ease-out forwards`;
@@ -313,8 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = (clientX - left) / width - 0.5;
         const y = (clientY - top) / height - 0.5;
 
-        const MAX_ROTATION = 12;
-        rotation = { x: -y * MAX_ROTATION, y: x * MAX_ROTATION };
+        rotation = { x: -y * CONFIG.MAX_ROTATION, y: x * CONFIG.MAX_ROTATION };
         mindmapRotation.style.transform = `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
     });
 
@@ -335,10 +374,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initial render
+    updateCentralNodeSize();
     renderMindMap();
     renderSaturnRing();
 
     window.addEventListener('resize', () => {
+        updateCentralNodeSize();
         renderMindMap();
         renderSaturnRing();
     });
